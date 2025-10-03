@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/luxon": "^3.7.1",
+    "@types/luxon": "^3.7.1", 
     "@types/node": "^20.19.19",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"
