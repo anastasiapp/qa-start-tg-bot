@@ -1,3 +1,7 @@
 node_modules
 .env
+.env.*
 dist
+data.db
+data.db-*
+.DS_Store
