@@ -1,8 +1,7 @@
 import { db } from './db.js'; // Импортируем нашу базу данных (db.ts создаёт таблицы и подключается к SQLite)
 import { nanoid } from 'nanoid'; // Импортируем генератор случайных коротких id (будем присваивать событиям)
 import { z } from 'zod'; // Импортируем библиотеку для валидации данных
-import { toUTC } from './time.js'; // Утилита для перевода локального времени в UTC
-
+import { parseLocalToUTC } from './time';
 
 // Тип для описания строки события в базе данных
 export type EventRow = {
@@ -43,7 +42,7 @@ export function parseNewEventLine(text: string) {
   // Возвращаем объект, который уже готов для записи в БД
   return {
     title,
-    start_at: toUTC(localDT), // переводим дату в UTC
+    start_at: parseLocalToUTC(localDT),
     duration_min: duration,
     meeting_url: url,
     is_public: vis === 'private' ? 0 : 1, // если private → 0, иначе → 1
