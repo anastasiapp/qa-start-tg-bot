@@ -40,3 +40,35 @@ export const fromUTC = (isoUTC: string, tz = 'local') =>
 /** Красивое локальное форматирование для сообщений бота */
 export const fmtLocal = (isoUTC: string) =>
   fromUTC(isoUTC).toFormat('dd LLL yyyy, HH:mm');
+
+/**
+ * Генерирует ссылку Google Calendar для добавления события
+ * @param title - название события
+ * @param startAt - дата/время начала в ISO UTC
+ * @param durationMin - длительность в минутах
+ * @param meetingUrl - ссылка на встречу
+ * @param description - описание (опционально)
+ */
+export function getCalendarLink(
+  title: string,
+  startAt: string,
+  durationMin: number,
+  meetingUrl: string,
+  description?: string
+): string {
+  const start = DateTime.fromISO(startAt, { zone: 'utc' });
+  const end = start.plus({ minutes: durationMin });
+
+  // Формат для Google Calendar: YYYYMMDDTHHmmssZ
+  const formatForCalendar = (dt: DateTime) => dt.toUTC().toFormat('yyyyMMdd\'T\'HHmmss\'Z\'');
+
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: title,
+    dates: `${formatForCalendar(start)}/${formatForCalendar(end)}`,
+    details: description || `Ссылка на встречу: ${meetingUrl}`,
+    location: meetingUrl,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}

@@ -99,3 +99,77 @@ export function subscribe(userId: number, eventId: string) {
     `INSERT OR IGNORE INTO subscriptions (user_id,event_id) VALUES (?,?)`,
   ).run(userId, eventId);
 }
+
+// --- Отписка пользователя от события ---
+export function unsubscribe(userId: number, eventId: string) {
+  db.prepare(
+    `DELETE FROM subscriptions WHERE user_id = ? AND event_id = ?`,
+  ).run(userId, eventId);
+}
+
+// --- Проверка, подписан ли пользователь на событие ---
+export function isSubscribed(userId: number, eventId: string): boolean {
+  const result = db.prepare(
+    `SELECT 1 FROM subscriptions WHERE user_id = ? AND event_id = ?`,
+  ).get(userId, eventId);
+  return !!result;
+}
+
+// --- Получить список подписчиков события ---
+export function getSubscribers(eventId: string): number[] {
+  const rows = db.prepare(
+    `SELECT user_id FROM subscriptions WHERE event_id = ?`,
+  ).all(eventId) as Array<{ user_id: number }>;
+  return rows.map(r => r.user_id);
+}
+
+// --- Обновить событие ---
+export function updateEvent(eventId: string, updates: Partial<Omit<EventRow, 'id'>>) {
+  const fields: string[] = [];
+  const values: any[] = [];
+
+  if (updates.title !== undefined) {
+    fields.push('title = ?');
+    values.push(updates.title);
+  }
+  if (updates.start_at !== undefined) {
+    fields.push('start_at = ?');
+    values.push(updates.start_at);
+  }
+  if (updates.duration_min !== undefined) {
+    fields.push('duration_min = ?');
+    values.push(updates.duration_min);
+  }
+  if (updates.meeting_url !== undefined) {
+    fields.push('meeting_url = ?');
+    values.push(updates.meeting_url);
+  }
+  if (updates.is_public !== undefined) {
+    fields.push('is_public = ?');
+    values.push(updates.is_public);
+  }
+
+  if (fields.length === 0) return false;
+
+  fields.push('updated_at = datetime(\'now\')');
+  values.push(eventId);
+
+  const stmt = db.prepare(
+    `UPDATE events SET ${fields.join(', ')} WHERE id = ? AND cancelled_at IS NULL`,
+  );
+  stmt.run(...values);
+  return true;
+}
+
+// --- Отменить событие ---
+export function cancelEvent(eventId: string) {
+  db.prepare(
+    `UPDATE events SET cancelled_at = datetime('now') WHERE id = ? AND cancelled_at IS NULL`,
+  ).run(eventId);
+}
+
+// --- Получить всех пользователей бота ---
+export function getAllUsers(): number[] {
+  const rows = db.prepare(`SELECT id FROM users`).all() as Array<{ id: number }>;
+  return rows.map(r => r.id);
+}
